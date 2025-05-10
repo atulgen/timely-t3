@@ -30,6 +30,8 @@ export const activityRouter = createTRPCRouter({
             about: input.about,
             hoursWorked: input.hoursWorked,
             remark: input.remark,
+            // performedBy: input.performedBy,
+            performedBy: { connect: { id: ctx.session.user.id } },
             verifiedBy: input.verifiedBy,
             project: { connect: { id: input.projectId } },
           },
