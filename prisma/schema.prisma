@@ -14,6 +14,38 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
+model Project {
+    id        String   @id @default(cuid())
+    name      String
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    // Relation to User (created by)
+    createdBy   User   @relation(fields: [createdById], references: [id])
+    createdById String
+
+    // Relation to Activity
+    activities Activity[]
+
+    @@index([name])
+}
+
+model Activity {
+    id          String   @id @default(cuid())
+    about       String
+    hoursWorked Float
+    remark      String?
+    verifiedBy  String?
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+
+    // Relation to Project
+    project   Project @relation(fields: [projectId], references: [id])
+    projectId String
+
+    @@index([projectId])
+}
+
 model Post {
     id        Int      @id @default(autoincrement())
     name      String
@@ -63,6 +95,7 @@ model User {
     accounts      Account[]
     sessions      Session[]
     posts         Post[]
+    projects      Project[] // Added relation to Project
 }
 
 model VerificationToken {
