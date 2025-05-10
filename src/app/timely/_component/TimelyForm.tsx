@@ -15,9 +15,7 @@ const formSchema = z.object({
   projectId: z.string().optional(),
   newProjectName: z.string().min(1, "Project name is required").optional(),
   about: z.string().min(1, "Activity description is required"),
-  hoursWorked: z.coerce
-    .number()
-    .positive("Hours must be a positive number"),
+  hoursWorked: z.coerce.number().positive("Hours must be a positive number"),
   remark: z.string().optional(),
 });
 
@@ -27,10 +25,11 @@ type FormValues = z.infer<typeof formSchema>;
 export function TimelyForm() {
   const [isCreatingNewProject, setIsCreatingNewProject] = useState(false);
   const utils = api.useUtils();
-  
+
   // Fetch all projects
-  const { data: projects, isLoading: projectsLoading } = api.project.getAll.useQuery();
-  
+  const { data: projects, isLoading: projectsLoading } =
+    api.project.getAll.useQuery();
+
   // Initialize form with react-hook-form and zod resolver
   const {
     register,
@@ -46,10 +45,10 @@ export function TimelyForm() {
       remark: "",
     },
   });
-  
+
   // Watch project ID to determine if we need to show the new project input
   const selectedProjectId = watch("projectId");
-  
+
   useEffect(() => {
     if (selectedProjectId === "new") {
       setIsCreatingNewProject(true);
@@ -57,7 +56,7 @@ export function TimelyForm() {
       setIsCreatingNewProject(false);
     }
   }, [selectedProjectId]);
-  
+
   // Create new project mutation
   const createProject = api.project.create.useMutation({
     onSuccess: async (newProject) => {
@@ -65,7 +64,7 @@ export function TimelyForm() {
       return newProject;
     },
   });
-  
+
   // Create activity mutation
   const createActivity = api.activity.create.useMutation({
     onSuccess: async () => {
@@ -73,12 +72,12 @@ export function TimelyForm() {
       reset();
     },
   });
-  
+
   // Handle form submission
   const onSubmit = async (data: FormValues) => {
     try {
       let projectId = data.projectId;
-      
+
       // If creating a new project, create it first and get the ID
       if (isCreatingNewProject && data.newProjectName) {
         const newProject = await createProject.mutateAsync({
@@ -86,7 +85,7 @@ export function TimelyForm() {
         });
         projectId = newProject.id;
       }
-      
+
       // Now create the activity with the project ID
       if (projectId) {
         await createActivity.mutateAsync({
@@ -100,11 +99,11 @@ export function TimelyForm() {
       console.error("Error submitting form:", error);
     }
   };
-  
+
   return (
     <div className="w-full max-w-md rounded-lg bg-white/10 p-6 text-white">
       <h2 className="mb-6 text-2xl font-bold">Log Your Time</h2>
-      
+
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
         {/* Project Selection */}
         <div className="flex flex-col gap-1">
@@ -132,7 +131,7 @@ export function TimelyForm() {
             <p className="text-sm text-red-400">{errors.projectId.message}</p>
           )}
         </div>
-        
+
         {/* New Project Name (conditional) */}
         {isCreatingNewProject && (
           <div className="flex flex-col gap-1">
@@ -153,7 +152,7 @@ export function TimelyForm() {
             )}
           </div>
         )}
-        
+
         {/* Activity Details */}
         <div className="flex flex-col gap-1">
           <label htmlFor="about" className="font-medium">
@@ -170,7 +169,7 @@ export function TimelyForm() {
             <p className="text-sm text-red-400">{errors.about.message}</p>
           )}
         </div>
-        
+
         <div className="flex flex-col gap-1">
           <label htmlFor="hoursWorked" className="font-medium">
             Hours Worked
@@ -187,7 +186,7 @@ export function TimelyForm() {
             <p className="text-sm text-red-400">{errors.hoursWorked.message}</p>
           )}
         </div>
-        
+
         <div className="flex flex-col gap-1">
           <label htmlFor="remark" className="font-medium">
             Remarks (Optional)
@@ -200,10 +199,12 @@ export function TimelyForm() {
             rows={3}
           />
         </div>
-        
+
         <button
           type="submit"
-          disabled={isSubmitting || createProject.isPending || createActivity.isPending}
+          disabled={
+            isSubmitting || createProject.isPending || createActivity.isPending
+          }
           className="mt-4 rounded-full bg-white/10 px-10 py-3 font-semibold transition hover:bg-white/20 disabled:opacity-50"
         >
           {isSubmitting || createProject.isPending || createActivity.isPending

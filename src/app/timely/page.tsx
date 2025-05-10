@@ -30,9 +30,7 @@ export default async function TimelyPage() {
 
           <TimelyForm />
 
-          <ActivitiesList/>
-
-          {/* Display logged activities could be added here */}
+          {/* <ActivitiesList/> */}
         </div>
       </main>
     </HydrateClient>
