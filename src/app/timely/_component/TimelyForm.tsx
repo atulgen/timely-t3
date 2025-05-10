@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @next/next/no-html-link-for-pages */
 /* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
@@ -5,61 +6,58 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 "use client";
 
-import { useState, useEffect } from "react";
 import { z } from "zod";
-import { useForm } from "react-hook-form";
+import { useFieldArray, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { api } from "@/trpc/react";
 
 // Define the form schema with Zod
 const formSchema = z.object({
-  projectId: z.string().optional(),
-  newProjectName: z.string().min(1, "Project name is required").optional(),
-  about: z.string().min(1, "Activity description is required"),
-  hoursWorked: z.coerce.number().positive("Hours must be a positive number"),
-  remark: z.string().optional(),
+  entries: z.array(
+    z.object({
+      projectId: z.string().optional(),
+      newProjectName: z.string().min(1, "Project name is required").optional(),
+      about: z.string().min(1, "Activity description is required"),
+      hoursWorked: z.coerce
+        .number()
+        .positive("Hours must be a positive number"),
+      remark: z.string().optional(),
+    }),
+  ),
 });
 
-// TypeScript type derived from the schema
 type FormValues = z.infer<typeof formSchema>;
 
-// Original TimelyForm Component wrapped in the new layout
 export default function TimelyForm() {
-  const [isCreatingNewProject, setIsCreatingNewProject] = useState(false);
   const utils = api.useUtils();
-
-  // Fetch all projects
   const { data: projects, isLoading: projectsLoading } =
     api.project.getAll.useQuery();
 
-  // Initialize form with react-hook-form and zod resolver
   const {
     register,
     handleSubmit,
-    reset,
+    control,
     watch,
+    reset,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      about: "",
-      hoursWorked: 1,
-      remark: "",
+      entries: [
+        {
+          about: "",
+          hoursWorked: 1,
+          remark: "",
+        },
+      ],
     },
   });
 
-  // Watch project ID to determine if we need to show the new project input
-  const selectedProjectId = watch("projectId");
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "entries",
+  });
 
-  useEffect(() => {
-    if (selectedProjectId === "new") {
-      setIsCreatingNewProject(true);
-    } else {
-      setIsCreatingNewProject(false);
-    }
-  }, [selectedProjectId]);
-
-  // Create new project mutation
   const createProject = api.project.create.useMutation({
     onSuccess: async (newProject) => {
       await utils.project.getAll.invalidate();
@@ -67,190 +65,199 @@ export default function TimelyForm() {
     },
   });
 
-  // Create activity mutation
   const createActivity = api.activity.create.useMutation({
     onSuccess: async () => {
       await utils.project.getAll.invalidate();
-      reset();
     },
   });
 
-  // Handle form submission
   const onSubmit = async (data: FormValues) => {
     try {
-      let projectId = data.projectId;
+      for (const entry of data.entries) {
+        let projectId = entry.projectId;
 
-      // If creating a new project, create it first and get the ID
-      if (isCreatingNewProject && data.newProjectName) {
-        const newProject = await createProject.mutateAsync({
-          name: data.newProjectName,
-        });
-        projectId = newProject.id;
-      }
+        if (entry.projectId === "new" && entry.newProjectName) {
+          const newProject = await createProject.mutateAsync({
+            name: entry.newProjectName,
+          });
+          projectId = newProject.id;
+        }
 
-      // Now create the activity with the project ID
-      if (projectId) {
-        await createActivity.mutateAsync({
-          projectId,
-          about: data.about,
-          hoursWorked: data.hoursWorked,
-          remark: data.remark ?? undefined,
-        });
+        if (projectId) {
+          await createActivity.mutateAsync({
+            projectId,
+            about: entry.about,
+            hoursWorked: entry.hoursWorked,
+            remark: entry.remark ?? undefined,
+          });
+        }
       }
+      reset();
     } catch (error) {
       console.error("Error submitting form:", error);
     }
   };
 
+  const addNewRow = () => {
+    append({
+      about: "",
+      hoursWorked: 1,
+      remark: "",
+    });
+  };
+
   return (
-    <div className="space-y-6">
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        {/* Project Row */}
-        <div className="flex flex-col gap-4 md:flex-row">
-          <div className="w-full md:w-1/3">
-            <label htmlFor="projectId" className="mb-2 block font-medium">
-              Project
-            </label>
-            <select
-              id="projectId"
-              {...register("projectId")}
-              className="w-full rounded-md border border-white/20 bg-white/10 px-3 py-2 text-black"
-              defaultValue=""
-            >
-              <option value="" disabled>
-                Select a project
-              </option>
-              {!projectsLoading &&
-                projects?.map((project) => (
-                  <option key={project.id} value={project.id}>
-                    {project.name}
-                  </option>
-                ))}
-              <option value="new">+ Create New Project</option>
-            </select>
-            {errors.projectId && (
-              <p className="mt-1 text-sm text-red-400">
-                {errors.projectId.message}
-              </p>
-            )}
-          </div>
+    <div className="mx-auto max-w-6xl px-4 py-6">
+      <h1 className="mb-6 text-2xl font-bold text-gray-800 dark:text-white">
+        Logger
+      </h1>
 
-          <div className="w-full md:w-2/3">
-            <label htmlFor="about" className="mb-2 block font-medium">
-              Activity
-            </label>
-            <input
-              id="about"
-              type="text"
-              {...register("about")}
-              className="w-full rounded-md border border-white/20 bg-white/10 px-3 py-2 text-white"
-              placeholder="What did you work on?"
-            />
-            {errors.about && (
-              <p className="mt-1 text-sm text-red-400">
-                {errors.about.message}
-              </p>
-            )}
-          </div>
-        </div>
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-md dark:border-gray-700">
+          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead className="bg-gray-50 dark:bg-gray-800">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-300">
+                  Project
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-300">
+                  Activity
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-300">
+                  Hours
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-300">
+                  Remarks
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-300">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
+              {fields.map((field, index) => {
+                const isCreatingNewProject =
+                  watch(`entries.${index}.projectId`) === "new";
+                return (
+                  <tr
+                    key={field.id}
+                    className="hover:bg-gray-50 dark:hover:bg-gray-700"
+                  >
+                    {/* Project */}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex flex-col space-y-2">
+                        <select
+                          {...register(`entries.${index}.projectId`)}
+                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                        >
+                          <option value="">Select project</option>
+                          {!projectsLoading &&
+                            projects?.map((project) => (
+                              <option key={project.id} value={project.id}>
+                                {project.name}
+                              </option>
+                            ))}
+                          <option value="new">+ Create New Project</option>
+                        </select>
+                        {isCreatingNewProject && (
+                          <input
+                            {...register(`entries.${index}.newProjectName`)}
+                            placeholder="New project name"
+                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                          />
+                        )}
+                        {errors.entries?.[index]?.projectId && (
+                          <p className="text-sm text-red-600 dark:text-red-400">
+                            {errors.entries[index]?.projectId?.message}
+                          </p>
+                        )}
+                      </div>
+                    </td>
 
-        {/* New Project Name (conditional) */}
-        {isCreatingNewProject && (
-          <div className="mt-4">
-            <label htmlFor="newProjectName" className="mb-2 block font-medium">
-              New Project Name
-            </label>
-            <input
-              id="newProjectName"
-              type="text"
-              {...register("newProjectName")}
-              className="w-full rounded-md border border-white/20 bg-white/10 px-3 py-2 text-white"
-              placeholder="Enter project name"
-            />
-            {errors.newProjectName && (
-              <p className="mt-1 text-sm text-red-400">
-                {errors.newProjectName.message}
-              </p>
-            )}
-          </div>
-        )}
+                    {/* Activity */}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <input
+                        {...register(`entries.${index}.about`)}
+                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                        placeholder="Activity description"
+                      />
+                      {errors.entries?.[index]?.about && (
+                        <p className="text-sm text-red-600 dark:text-red-400">
+                          {errors.entries[index]?.about?.message}
+                        </p>
+                      )}
+                    </td>
 
-        {/* Hours & Remarks Row */}
-        <div className="flex flex-col gap-4 md:flex-row">
-          <div className="w-full md:w-1/3">
-            <label htmlFor="hoursWorked" className="mb-2 block font-medium">
-              Hours
-            </label>
-            <input
-              id="hoursWorked"
-              type="number"
-              step="0.25"
-              min="0.25"
-              {...register("hoursWorked")}
-              className="w-full rounded-md border border-white/20 bg-white/10 px-3 py-2 text-white"
-            />
-            {errors.hoursWorked && (
-              <p className="mt-1 text-sm text-red-400">
-                {errors.hoursWorked.message}
-              </p>
-            )}
-          </div>
+                    {/* Hours */}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <input
+                        type="number"
+                        step="0.25"
+                        min="0.25"
+                        {...register(`entries.${index}.hoursWorked`)}
+                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                      />
+                      {errors.entries?.[index]?.hoursWorked && (
+                        <p className="text-sm text-red-600 dark:text-red-400">
+                          {errors.entries[index]?.hoursWorked?.message}
+                        </p>
+                      )}
+                    </td>
 
-          <div className="w-full md:w-2/3">
-            <label htmlFor="remark" className="mb-2 block font-medium">
-              Remarks
-            </label>
-            <input
-              id="remark"
-              type="text"
-              {...register("remark")}
-              className="w-full rounded-md border border-white/20 bg-white/10 px-3 py-2 text-white"
-              placeholder="Any additional notes? (Optional)"
-            />
-          </div>
-        </div>
+                    {/* Remarks */}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <input
+                        {...register(`entries.${index}.remark`)}
+                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                        placeholder="Optional notes"
+                      />
+                    </td>
 
-        {/* Add Button */}
-        <div className="mt-6 flex justify-end">
-          <button
-            type="submit"
-            disabled={
-              isSubmitting ||
-              createProject.isPending ||
-              createActivity.isPending
-            }
-            className="rounded-md bg-white/10 px-4 py-2 font-medium transition hover:bg-white/20 disabled:opacity-50"
-          >
-            {isSubmitting || createProject.isPending || createActivity.isPending
-              ? "Adding..."
-              : "Add"}
-          </button>
-        </div>
-
-        {/* Save & Submit Buttons */}
-        <div className="flex justify-end space-x-4 border-t border-white/10 pt-6">
-          <button
-            type="button"
-            className="rounded-md bg-white/10 px-6 py-2 font-medium transition hover:bg-white/20"
-            disabled={
-              isSubmitting ||
-              createProject.isPending ||
-              createActivity.isPending
-            }
-          >
-            Save
-          </button>
-          <button
-            type="button"
-            className="rounded-md bg-white/10 px-6 py-2 font-medium transition hover:bg-white/20"
-            disabled={
-              isSubmitting ||
-              createProject.isPending ||
-              createActivity.isPending
-            }
-          >
-            Submit
-          </button>
+                    {/* Actions */}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <button
+                        type="button"
+                        onClick={() => remove(index)}
+                        className="mr-2 text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                      >
+                        Remove
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+            <tfoot className="bg-gray-50 dark:bg-gray-800">
+              <tr>
+                <td colSpan={5} className="px-6 py-3">
+                  <div className="flex justify-between">
+                    <button
+                      type="button"
+                      onClick={addNewRow}
+                      className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none dark:focus:ring-offset-gray-800"
+                    >
+                      Add Row
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={
+                        isSubmitting ||
+                        createProject.isPending ||
+                        createActivity.isPending
+                      }
+                      className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50 dark:focus:ring-offset-gray-800"
+                    >
+                      {isSubmitting ||
+                      createProject.isPending ||
+                      createActivity.isPending
+                        ? "Submitting..."
+                        : "Submit Timesheet"}
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tfoot>
+          </table>
         </div>
       </form>
     </div>
