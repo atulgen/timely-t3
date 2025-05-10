@@ -31,31 +31,23 @@ model Project {
 }
 
 model Activity {
-    id          String   @id @default(cuid())
+    id          String  @id @default(cuid())
     about       String
     hoursWorked Float
     remark      String?
-    verifiedBy  String?
-    createdAt   DateTime @default(now())
-    updatedAt   DateTime @updatedAt
+
+    performedBy   User   @relation(fields: [performedById], references: [id])
+    performedById String
+
+    verifiedBy String?
+    createdAt  DateTime @default(now())
+    updatedAt  DateTime @updatedAt
 
     // Relation to Project
     project   Project @relation(fields: [projectId], references: [id])
     projectId String
 
     @@index([projectId])
-}
-
-model Post {
-    id        Int      @id @default(autoincrement())
-    name      String
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-
-    createdBy   User   @relation(fields: [createdById], references: [id])
-    createdById String
-
-    @@index([name])
 }
 
 // Necessary for Next auth
@@ -96,6 +88,8 @@ model User {
     sessions      Session[]
     posts         Post[]
     projects      Project[] // Added relation to Project
+
+    Activity Activity[]
 }
 
 model VerificationToken {
@@ -104,4 +98,16 @@ model VerificationToken {
     expires    DateTime
 
     @@unique([identifier, token])
+}
+
+model Post {
+    id        Int      @id @default(autoincrement())
+    name      String
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    createdBy   User   @relation(fields: [createdById], references: [id])
+    createdById String
+
+    @@index([name])
 }
