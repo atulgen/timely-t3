@@ -3,6 +3,7 @@
 "use client";
 import { useState } from "react";
 import TimelyForm from "./TimelyForm";
+import { ActivitiesList } from "./ActivitiesList";
 
 // Main Timely App with new layout
 export default function TimelyApp() {
@@ -72,6 +73,7 @@ export default function TimelyApp() {
           {activeView === "daily" ? (
             <div className="rounded-lg bg-white/5 p-6">
               <TimelyForm />
+              <ActivitiesList/>
             </div>
           ) : (
             <div className="rounded-lg bg-white/5 p-6">
