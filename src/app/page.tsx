@@ -3,13 +3,15 @@ import Link from "next/link";
 import { LatestPost } from "@/app/_components/post";
 import { auth } from "@/server/auth";
 import { api, HydrateClient } from "@/trpc/server";
+import { redirect } from "next/navigation";
 
 export default async function Home() {
   const hello = await api.post.hello({ text: "from tRPC" });
   const session = await auth();
 
   if (session?.user) {
-    void api.post.getLatest.prefetch();
+    redirect("/timely")
+    // void api.post.getLatest.prefetch();
   }
 
   return (
@@ -38,12 +40,14 @@ export default async function Home() {
                   {session ? "Sign out" : "Sign in"}
                 </Link>
                 {session && (
-                  <Link
-                    href="/timely"
-                    className="rounded-full bg-purple-600/70 px-10 py-3 font-semibold no-underline transition hover:bg-purple-600/90"
-                  >
-                    Track Time
-                  </Link>
+                  <div>
+                    <Link
+                      href="/timely"
+                      className="rounded-full bg-purple-600/70 px-10 py-3 font-semibold no-underline transition hover:bg-purple-600/90"
+                    >
+                      Track Time
+                    </Link>
+                  </div>
                 )}
               </div>
             </div>

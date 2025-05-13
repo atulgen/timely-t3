@@ -4,8 +4,12 @@ import { Calendar, Clock, LogOut, PieChart } from "lucide-react";
 import { useState } from "react";
 import TimesheetUI from "./TimeSheet";
 
+type AppProps = {
+  developer?: {name: string | null, email: string | null};
+};
+
 // Main Timely App with enhanced premium layout
-export default function TimelyApp() {
+export default function TimelyApp({ developer }: AppProps) {
   const [activeView, setActiveView] = useState("daily"); // Options: "daily" or "weekly"
   const [isDarkMode, setIsDarkMode] = useState(true);
 
@@ -139,16 +143,16 @@ export default function TimelyApp() {
           >
             <div className="mb-3 flex items-center">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-blue-500 font-bold text-white">
-                JD
+                {developer?.name?.toUpperCase().slice(0, 2)}
               </div>
               <div className="ml-3">
-                <div className="font-medium">John Doe</div>
+                <div className="font-medium">{developer?.name}</div>
                 <div
                   className={`text-sm ${
                     isDarkMode ? "text-gray-400" : "text-gray-500"
                   }`}
                 >
-                  john@example.com
+                  {developer?.email}
                 </div>
               </div>
             </div>
@@ -180,7 +184,7 @@ export default function TimelyApp() {
                 {formattedDate}
               </p>
             </div>
-            <div className="mt-4 flex space-x-3 sm:mt-0">
+            {/* <div className="mt-4 flex space-x-3 sm:mt-0">
               <button
                 className={`rounded-lg px-4 py-2 ${
                   isDarkMode
@@ -193,7 +197,7 @@ export default function TimelyApp() {
               <button className="rounded-lg bg-green-500 px-4 py-2 text-white hover:bg-green-600">
                 Quick Add
               </button>
-            </div>
+            </div> */}
           </div>
 
           {/* Main Content */}
