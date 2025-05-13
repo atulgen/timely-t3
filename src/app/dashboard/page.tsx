@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/server/auth";
 import { HydrateClient } from "@/trpc/server";
-import { ProjectDashboard } from "./_components/ProjectDashboard";
+// import { ProjectDashboard } from "./_components/ProjectDashboard";
 
 export default async function DashboardPage() {
   // Check authentication
@@ -45,7 +45,7 @@ export default async function DashboardPage() {
           </header>
 
           {/* Main Content */}
-          <ProjectDashboard />
+          {/* <ProjectDashboard /> */}
         </div>
       </main>
     </HydrateClient>
