@@ -21,9 +21,9 @@ export const activityRouter = createTRPCRouter({
           select: { createdById: true },
         });
 
-        if (!project || project.createdById !== ctx.session.user.id) {
-          throw new Error("Not authorized to add activities to this project");
-        }
+        // if (!project || project.createdById !== ctx.session.user.id) {
+        //   throw new Error("Not authorized to add activities to this project");
+        // }
 
         return ctx.db.activity.create({
           data: {

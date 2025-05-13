@@ -37,7 +37,6 @@ export default function TimesheetUI() {
     ),
   }));
 
-  //   const [expandedProject, setExpandedProject] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
 
   const {
@@ -124,14 +123,6 @@ export default function TimesheetUI() {
       await deleteActivity.mutateAsync({ id: activityId });
     }
   };
-
-  //   const toggleProject = (projectId: string) => {
-  //     if (expandedProject === projectId) {
-  //       setExpandedProject(null);
-  //     } else {
-  //       setExpandedProject(projectId);
-  //     }
-  //   };
 
   // Format date to a readable string
   const formatDate = (date: Date) => {
@@ -410,7 +401,7 @@ export default function TimesheetUI() {
           )}
         </div>
 
-        {/* Timesheet Summary */}
+        {/* Timesheet Summary - Only shows user's own activities */}
         {sortedProjects && sortedProjects.length > 0 && (
           <div className="border-t border-gray-200 p-6 dark:border-gray-700">
             <h3 className="mb-4 text-lg font-medium text-gray-800 dark:text-white">
@@ -422,12 +413,12 @@ export default function TimesheetUI() {
                   Total Projects
                 </h4>
                 <p className="mt-2 text-2xl font-bold text-indigo-600 dark:text-indigo-400">
-                  {sortedProjects.length}
+                  {projects?.length ?? 0}
                 </p>
               </div>
               <div className="rounded-lg bg-green-50 p-4 dark:bg-green-900/30">
                 <h4 className="text-sm font-medium text-green-800 dark:text-green-300">
-                  Total Activities
+                  Your Activities
                 </h4>
                 <p className="mt-2 text-2xl font-bold text-green-600 dark:text-green-400">
                   {sortedProjects.reduce(
@@ -438,7 +429,7 @@ export default function TimesheetUI() {
               </div>
               <div className="rounded-lg bg-purple-50 p-4 dark:bg-purple-900/30">
                 <h4 className="text-sm font-medium text-purple-800 dark:text-purple-300">
-                  Total Hours
+                  Your Total Hours
                 </h4>
                 <p className="mt-2 text-2xl font-bold text-purple-600 dark:text-purple-400">
                   {sortedProjects

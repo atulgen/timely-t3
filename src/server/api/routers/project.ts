@@ -1,9 +1,6 @@
 import { z } from "zod";
 
-import {
-  createTRPCRouter,
-  protectedProcedure,
-} from "@/server/api/trpc";
+import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 
 export const projectRouter = createTRPCRouter({
   create: protectedProcedure
@@ -18,11 +15,19 @@ export const projectRouter = createTRPCRouter({
     }),
 
   getAll: protectedProcedure.query(async ({ ctx }) => {
-    return ctx.db.project.findMany({
-      where: { createdById: ctx.session.user.id },
+    // Get all projects, but include activities only if they belong to the current user
+    const projects = await ctx.db.project.findMany({
       orderBy: { createdAt: "desc" },
-      include: { activities: true },
+      include: {
+        activities: {
+          where: {
+            performedById: ctx.session.user.id,
+          },
+        },
+      },
     });
+
+    return projects;
   }),
 
   getById: protectedProcedure
@@ -35,10 +40,12 @@ export const projectRouter = createTRPCRouter({
     }),
 
   update: protectedProcedure
-    .input(z.object({
-      id: z.string(),
-      name: z.string().min(1),
-    }))
+    .input(
+      z.object({
+        id: z.string(),
+        name: z.string().min(1),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       try {
         // Ensure the user owns this project
