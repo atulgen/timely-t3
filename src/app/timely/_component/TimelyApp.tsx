@@ -5,7 +5,7 @@ import { useState } from "react";
 import TimesheetUI from "./TimeSheet";
 
 type AppProps = {
-  developer?: {name: string | null, email: string | null};
+  developer?: { name: string | null; email: string | null };
 };
 
 // Main Timely App with enhanced premium layout

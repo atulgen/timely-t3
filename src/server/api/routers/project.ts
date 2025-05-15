@@ -30,6 +30,30 @@ export const projectRouter = createTRPCRouter({
     return projects;
   }),
 
+  getToday: protectedProcedure.query(async ({ ctx }) => {
+    // Create date objects for the start and end of today
+    const today = new Date();
+    const startOfDay = new Date(today.setHours(0, 0, 0, 0));
+    const endOfDay = new Date(today.setHours(23, 59, 59, 999));
+
+    // Get all projects, but include activities only if they belong to the current user and were created today
+    const projects = await ctx.db.project.findMany({
+      orderBy: { createdAt: "desc" },
+      include: {
+        activities: {
+          where: {
+            performedById: ctx.session.user.id,
+            createdAt: {
+              gte: startOfDay,
+              lte: endOfDay,
+            },
+          },
+        },
+      },
+    });
+
+    return projects;
+  }),
   getById: protectedProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
