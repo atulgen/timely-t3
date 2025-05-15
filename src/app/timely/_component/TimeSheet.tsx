@@ -73,6 +73,7 @@ export default function TimesheetUI() {
   const createActivity = api.activity.create.useMutation({
     onSuccess: async () => {
       await utils.project.getAll.invalidate();
+      await utils.project.getToday.invalidate();
       setIsAdding(false);
     },
   });
@@ -80,6 +81,7 @@ export default function TimesheetUI() {
   const deleteActivity = api.activity.delete.useMutation({
     onSuccess: async () => {
       await utils.project.getAll.invalidate();
+      await utils.project.getToday.invalidate();
     },
   });
 
@@ -104,6 +106,13 @@ export default function TimesheetUI() {
           });
         }
       }
+
+      // Make sure to invalidate the getToday query specifically
+      await utils.project.getToday.invalidate();
+
+      // Force refetch to ensure UI updates with latest data
+      const refreshedData = await utils.project.getToday.fetch();
+
       reset();
     } catch (error) {
       console.error("Error submitting form:", error);
@@ -132,6 +141,8 @@ export default function TimesheetUI() {
       day: "numeric",
     });
   };
+
+  // Rest of your component (render, etc.)
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-6">
