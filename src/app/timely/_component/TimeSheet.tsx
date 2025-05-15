@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { z } from "zod";
-import { useFieldArray, useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { api } from "@/trpc/react";
-import { Clock, Plus, Trash2, X } from "lucide-react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Plus, Trash2, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useFieldArray, useForm } from "react-hook-form";
+import { z } from "zod";
 
 // Define the form schema with Zod
 const formSchema = z.object({
