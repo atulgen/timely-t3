@@ -145,9 +145,9 @@ export const activityRouter = createTRPCRouter({
           throw new Error("Activity not found");
         }
 
-        if (activity.project.createdById !== ctx.session.user.id) {
-          throw new Error("Not authorized to delete this activity");
-        }
+        // if (activity.project.createdById !== ctx.session.user.id) {
+        //   throw new Error("Not authorized to delete this activity");
+        // }
 
         return ctx.db.activity.delete({
           where: { id: input.id },
