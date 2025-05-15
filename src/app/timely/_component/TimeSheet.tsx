@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { z } from "zod";
 import { useFieldArray, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { api } from "@/trpc/react";
+import { Clock, Plus, Trash2, X } from "lucide-react";
 
 // Define the form schema with Zod
 const formSchema = z.object({
@@ -38,6 +39,7 @@ export default function TimesheetUI() {
   }));
 
   const [isAdding, setIsAdding] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   const {
     register,
@@ -58,6 +60,10 @@ export default function TimesheetUI() {
       ],
     },
   });
+
+  useEffect(() => {
+    setIsDarkMode(true);
+  }, [isDarkMode]);
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -107,12 +113,8 @@ export default function TimesheetUI() {
         }
       }
 
-      // Make sure to invalidate the getToday query specifically
       await utils.project.getToday.invalidate();
-
-      // Force refetch to ensure UI updates with latest data
       const refreshedData = await utils.project.getToday.fetch();
-
       reset();
     } catch (error) {
       console.error("Error submitting form:", error);
@@ -133,7 +135,6 @@ export default function TimesheetUI() {
     }
   };
 
-  // Format date to a readable string
   const formatDate = (date: Date) => {
     return new Date(date).toLocaleDateString("en-US", {
       year: "numeric",
@@ -142,196 +143,287 @@ export default function TimesheetUI() {
     });
   };
 
-  // Rest of your component (render, etc.)
-
   return (
-    <div className="mx-auto max-w-6xl px-4 py-6">
-      <div className="mb-8 flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gray-800 dark:text-white">
-          Timesheet Manager
-        </h1>
+    <div className="mx-auto max-w-7xl p-6">
+      {/* Header */}
+      <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800 md:text-3xl dark:text-white">
+            Time Logger
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400">
+            Track and manage your daily activities
+          </p>
+        </div>
         <button
           onClick={() => setIsAdding(!isAdding)}
-          className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none dark:focus:ring-offset-gray-800"
+          className={`flex items-center gap-2 rounded-lg px-4 py-2 font-medium transition-colors ${
+            isAdding
+              ? "bg-red-500/10 text-red-500 hover:bg-red-500/20 dark:bg-red-400/10 dark:text-red-400 dark:hover:bg-red-400/20"
+              : "bg-green-500/10 text-green-500 hover:bg-green-500/20 dark:bg-green-400/10 dark:text-green-400 dark:hover:bg-green-400/20"
+          }`}
         >
-          {isAdding ? "Cancel" : "Add Time Entry"}
+          {isAdding ? (
+            <>
+              <X className="h-4 w-4" />
+              Cancel
+            </>
+          ) : (
+            <>
+              <Plus className="h-4 w-4" />
+              Add Entry
+            </>
+          )}
         </button>
       </div>
 
+      {/* Add Entry Form */}
       {isAdding && (
-        <div className="mb-8 rounded-lg border border-gray-200 bg-white p-6 shadow-md dark:border-gray-700 dark:bg-gray-800">
+        <div
+          className={`mb-8 rounded-xl p-6 shadow-lg ${
+            isDarkMode ? "bg-gray-800/50" : "bg-white"
+          }`}
+        >
           <h2 className="mb-4 text-xl font-semibold text-gray-800 dark:text-white">
             New Time Entry
           </h2>
           <form onSubmit={handleSubmit(onSubmit)}>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead className="bg-gray-50 dark:bg-gray-700">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-300">
-                      Project
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-300">
-                      Activity
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-300">
-                      Hours
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-300">
-                      Remarks
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-300">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
-                  {fields.map((field, index) => {
-                    const isCreatingNewProject =
-                      watch(`entries.${index}.projectId`) === "new";
-                    return (
-                      <tr
-                        key={field.id}
-                        className="hover:bg-gray-50 dark:hover:bg-gray-700"
-                      >
-                        {/* Project */}
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex flex-col space-y-2">
-                            <select
-                              {...register(`entries.${index}.projectId`)}
-                              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                            >
-                              <option value="">Select project</option>
-                              {!projectsLoading &&
-                                projects?.map((project) => (
-                                  <option key={project.id} value={project.id}>
-                                    {project.name}
-                                  </option>
-                                ))}
-                              <option value="new">+ Create New Project</option>
-                            </select>
-                            {isCreatingNewProject && (
-                              <input
-                                {...register(`entries.${index}.newProjectName`)}
-                                placeholder="New project name"
-                                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                                autoFocus
-                              />
-                            )}
-                            {errors.entries?.[index]?.projectId && (
-                              <p className="text-sm text-red-600 dark:text-red-400">
-                                {errors.entries[index]?.projectId?.message}
+            <div className="space-y-4">
+              {fields.map((field, index) => {
+                const isCreatingNewProject =
+                  watch(`entries.${index}.projectId`) === "new";
+                return (
+                  <div
+                    key={field.id}
+                    className={`rounded-lg p-4 ${
+                      isDarkMode ? "bg-gray-800" : "bg-gray-50"
+                    }`}
+                  >
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+                      {/* Project */}
+                      <div>
+                        <label
+                          htmlFor={`project-${index}`}
+                          className={`mb-1 block text-sm font-medium ${
+                            isDarkMode ? "text-gray-300" : "text-gray-700"
+                          }`}
+                        >
+                          Project
+                        </label>
+                        <select
+                          id={`project-${index}`}
+                          {...register(`entries.${index}.projectId`)}
+                          className={`block w-full rounded-lg border p-2 text-sm ${
+                            isDarkMode
+                              ? "border-gray-700 bg-gray-700 text-white focus:border-green-400 focus:ring-green-400"
+                              : "border-gray-300 bg-white text-gray-800 focus:border-green-500 focus:ring-green-500"
+                          }`}
+                        >
+                          <option value="">Select project</option>
+                          {!projectsLoading &&
+                            projects?.map((project) => (
+                              <option key={project.id} value={project.id}>
+                                {project.name}
+                              </option>
+                            ))}
+                          <option value="new">+ Create New Project</option>
+                        </select>
+                        {isCreatingNewProject && (
+                          <div className="mt-2">
+                            <input
+                              {...register(`entries.${index}.newProjectName`)}
+                              placeholder="New project name"
+                              className={`block w-full rounded-lg border p-2 text-sm ${
+                                isDarkMode
+                                  ? "border-gray-700 bg-gray-700 text-white focus:border-green-400 focus:ring-green-400"
+                                  : "border-gray-300 bg-white text-gray-800 focus:border-green-500 focus:ring-green-500"
+                              }`}
+                              autoFocus
+                            />
+                            {errors.entries?.[index]?.newProjectName && (
+                              <p className="mt-1 text-xs text-red-500 dark:text-red-400">
+                                {errors.entries[index]?.newProjectName?.message}
                               </p>
                             )}
                           </div>
-                        </td>
+                        )}
+                        {errors.entries?.[index]?.projectId && (
+                          <p className="mt-1 text-xs text-red-500 dark:text-red-400">
+                            {errors.entries[index]?.projectId?.message}
+                          </p>
+                        )}
+                      </div>
 
-                        {/* Activity */}
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <input
-                            {...register(`entries.${index}.about`)}
-                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                            placeholder="Activity description"
-                          />
-                          {errors.entries?.[index]?.about && (
-                            <p className="text-sm text-red-600 dark:text-red-400">
-                              {errors.entries[index]?.about?.message}
-                            </p>
-                          )}
-                        </td>
+                      {/* Activity */}
+                      <div>
+                        <label
+                          htmlFor={`activity-${index}`}
+                          className={`mb-1 block text-sm font-medium ${
+                            isDarkMode ? "text-gray-300" : "text-gray-700"
+                          }`}
+                        >
+                          Activity
+                        </label>
+                        <input
+                          id={`activity-${index}`}
+                          {...register(`entries.${index}.about`)}
+                          className={`block w-full rounded-lg border p-2 text-sm ${
+                            isDarkMode
+                              ? "border-gray-700 bg-gray-700 text-white focus:border-green-400 focus:ring-green-400"
+                              : "border-gray-300 bg-white text-gray-800 focus:border-green-500 focus:ring-green-500"
+                          }`}
+                          placeholder="What did you work on?"
+                        />
+                        {errors.entries?.[index]?.about && (
+                          <p className="mt-1 text-xs text-red-500 dark:text-red-400">
+                            {errors.entries[index]?.about?.message}
+                          </p>
+                        )}
+                      </div>
 
-                        {/* Hours */}
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <input
-                            type="number"
-                            step="0.25"
-                            min="0.25"
-                            {...register(`entries.${index}.hoursWorked`)}
-                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                          />
-                          {errors.entries?.[index]?.hoursWorked && (
-                            <p className="text-sm text-red-600 dark:text-red-400">
-                              {errors.entries[index]?.hoursWorked?.message}
-                            </p>
-                          )}
-                        </td>
+                      {/* Hours */}
+                      <div>
+                        <label
+                          htmlFor={`hours-${index}`}
+                          className={`mb-1 block text-sm font-medium ${
+                            isDarkMode ? "text-gray-300" : "text-gray-700"
+                          }`}
+                        >
+                          Hours
+                        </label>
+                        <input
+                          id={`hours-${index}`}
+                          type="number"
+                          step="0.25"
+                          min="0.25"
+                          {...register(`entries.${index}.hoursWorked`)}
+                          className={`block w-full rounded-lg border p-2 text-sm ${
+                            isDarkMode
+                              ? "border-gray-700 bg-gray-700 text-white focus:border-green-400 focus:ring-green-400"
+                              : "border-gray-300 bg-white text-gray-800 focus:border-green-500 focus:ring-green-500"
+                          }`}
+                        />
+                        {errors.entries?.[index]?.hoursWorked && (
+                          <p className="mt-1 text-xs text-red-500 dark:text-red-400">
+                            {errors.entries[index]?.hoursWorked?.message}
+                          </p>
+                        )}
+                      </div>
 
-                        {/* Remarks */}
-                        <td className="px-6 py-4 whitespace-nowrap">
+                      {/* Remarks */}
+                      <div className="flex items-end gap-2">
+                        <div className="flex-grow">
+                          <label
+                            htmlFor={`remarks-${index}`}
+                            className={`mb-1 block text-sm font-medium ${
+                              isDarkMode ? "text-gray-300" : "text-gray-700"
+                            }`}
+                          >
+                            Remarks
+                          </label>
                           <input
+                            id={`remarks-${index}`}
                             {...register(`entries.${index}.remark`)}
-                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                            className={`block w-full rounded-lg border p-2 text-sm ${
+                              isDarkMode
+                                ? "border-gray-700 bg-gray-700 text-white focus:border-green-400 focus:ring-green-400"
+                                : "border-gray-300 bg-white text-gray-800 focus:border-green-500 focus:ring-green-500"
+                            }`}
                             placeholder="Optional notes"
                           />
-                        </td>
-
-                        {/* Actions */}
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <button
-                            type="button"
-                            onClick={() => remove(index)}
-                            className="rounded px-2 py-1 text-sm text-red-600 hover:bg-red-100 hover:text-red-900 dark:text-red-400 dark:hover:bg-red-900/20 dark:hover:text-red-300"
-                          >
-                            Remove
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-                <tfoot className="bg-gray-50 dark:bg-gray-700">
-                  <tr>
-                    <td colSpan={5} className="px-6 py-3">
-                      <div className="flex justify-between">
+                        </div>
                         <button
                           type="button"
-                          onClick={addNewRow}
-                          className="rounded-md bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-300 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:outline-none dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500 dark:focus:ring-offset-gray-800"
+                          onClick={() => remove(index)}
+                          className={`rounded-lg p-2 ${
+                            isDarkMode
+                              ? "text-red-400 hover:bg-red-900/30"
+                              : "text-red-500 hover:bg-red-100"
+                          }`}
                         >
-                          Add Row
-                        </button>
-                        <button
-                          type="submit"
-                          disabled={
-                            isSubmitting ||
-                            createProject.isPending ||
-                            createActivity.isPending
-                          }
-                          className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50 dark:focus:ring-offset-gray-800"
-                        >
-                          {isSubmitting ||
-                          createProject.isPending ||
-                          createActivity.isPending
-                            ? "Submitting..."
-                            : "Submit Entries"}
+                          <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
-                    </td>
-                  </tr>
-                </tfoot>
-              </table>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
+              <button
+                type="button"
+                onClick={addNewRow}
+                className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium ${
+                  isDarkMode
+                    ? "bg-gray-700 text-gray-200 hover:bg-gray-600"
+                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                }`}
+              >
+                <Plus className="h-4 w-4" />
+                Add Another Entry
+              </button>
+              <button
+                type="submit"
+                disabled={
+                  isSubmitting ||
+                  createProject.isPending ||
+                  createActivity.isPending
+                }
+                className={`rounded-lg px-6 py-2 font-medium text-white transition-colors ${
+                  isSubmitting ||
+                  createProject.isPending ||
+                  createActivity.isPending
+                    ? "bg-green-400/70 dark:bg-green-600/70"
+                    : "bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700"
+                }`}
+              >
+                {isSubmitting ||
+                createProject.isPending ||
+                createActivity.isPending
+                  ? "Saving..."
+                  : "Save Entries"}
+              </button>
             </div>
           </form>
         </div>
       )}
 
       {/* Timesheet Records */}
-      <div className="rounded-lg border border-gray-200 bg-white shadow-md dark:border-gray-700 dark:bg-gray-800">
+      <div
+        className={`rounded-xl shadow-lg ${
+          isDarkMode ? "bg-gray-800/50" : "bg-white"
+        }`}
+      >
         <div className="p-6">
-          <h2 className="mb-4 text-xl font-semibold text-gray-800 dark:text-white">
-            Timesheet Records
+          <h2 className="mb-6 text-xl font-semibold text-gray-800 dark:text-white">
+            Today&apos;s Activities
           </h2>
 
           {projectsLoading ? (
             <div className="flex h-32 items-center justify-center">
-              <div className="text-center text-gray-500 dark:text-gray-400">
+              <div
+                className={`text-center ${
+                  isDarkMode ? "text-gray-400" : "text-gray-500"
+                }`}
+              >
                 Loading your timesheet data...
               </div>
             </div>
           ) : !sortedProjects || sortedProjects.length === 0 ? (
-            <div className="flex h-32 items-center justify-center rounded-lg border border-dashed border-gray-300 bg-gray-50 dark:border-gray-700 dark:bg-gray-900/50">
-              <div className="text-center text-gray-500 dark:text-gray-400">
-                <p className="mb-2">No timesheet entries found</p>
+            <div
+              className={`flex h-32 items-center justify-center rounded-lg border border-dashed ${
+                isDarkMode
+                  ? "border-gray-700 bg-gray-900/50"
+                  : "border-gray-300 bg-gray-50"
+              }`}
+            >
+              <div
+                className={`text-center ${
+                  isDarkMode ? "text-gray-400" : "text-gray-500"
+                }`}
+              >
+                <p className="mb-2">No activities recorded today</p>
                 <p className="text-sm">
                   Add your first time entry to get started
                 </p>
@@ -340,34 +432,62 @@ export default function TimesheetUI() {
           ) : (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead className="bg-gray-50 dark:bg-gray-700">
+                <thead>
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-300">
+                    <th
+                      className={`px-6 py-3 text-left text-xs font-medium tracking-wider uppercase ${
+                        isDarkMode ? "text-gray-300" : "text-gray-500"
+                      }`}
+                    >
                       Project
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-300">
+                    <th
+                      className={`px-6 py-3 text-left text-xs font-medium tracking-wider uppercase ${
+                        isDarkMode ? "text-gray-300" : "text-gray-500"
+                      }`}
+                    >
                       Activity
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-300">
+                    <th
+                      className={`px-6 py-3 text-left text-xs font-medium tracking-wider uppercase ${
+                        isDarkMode ? "text-gray-300" : "text-gray-500"
+                      }`}
+                    >
                       Hours
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-300">
-                      Date
+                    <th
+                      className={`px-6 py-3 text-left text-xs font-medium tracking-wider uppercase ${
+                        isDarkMode ? "text-gray-300" : "text-gray-500"
+                      }`}
+                    >
+                      Time
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-300">
-                      Remarks
+                    <th
+                      className={`px-6 py-3 text-left text-xs font-medium tracking-wider uppercase ${
+                        isDarkMode ? "text-gray-300" : "text-gray-500"
+                      }`}
+                    >
+                      Notes
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-300">
+                    <th
+                      className={`px-6 py-3 text-right text-xs font-medium tracking-wider uppercase ${
+                        isDarkMode ? "text-gray-300" : "text-gray-500"
+                      }`}
+                    >
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
+                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                   {sortedProjects.flatMap((project) =>
                     project.activities.map((activity) => (
                       <tr
                         key={activity.id}
-                        className="hover:bg-gray-50 dark:hover:bg-gray-700"
+                        className={`${
+                          isDarkMode
+                            ? "hover:bg-gray-700/50"
+                            : "hover:bg-gray-50"
+                        }`}
                       >
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="font-medium text-gray-900 dark:text-white">
@@ -375,32 +495,54 @@ export default function TimesheetUI() {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-gray-900 dark:text-white">
+                          <div className="text-gray-900 dark:text-gray-200">
                             {activity.about}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-gray-900 dark:text-white">
-                            {activity.hoursWorked}
+                          <div
+                            className={`font-medium ${
+                              isDarkMode ? "text-green-400" : "text-green-600"
+                            }`}
+                          >
+                            {activity.hoursWorked}h
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-gray-500 dark:text-gray-300">
-                            {formatDate(activity.createdAt)}
+                          <div
+                            className={`text-sm ${
+                              isDarkMode ? "text-gray-400" : "text-gray-500"
+                            }`}
+                          >
+                            {new Date(activity.createdAt).toLocaleTimeString(
+                              [],
+                              {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              },
+                            )}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-gray-500 dark:text-gray-300">
+                        <td className="px-6 py-4">
+                          <div
+                            className={`max-w-xs truncate ${
+                              isDarkMode ? "text-gray-400" : "text-gray-500"
+                            }`}
+                          >
                             {activity.remark ?? "—"}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-6 py-4 text-right whitespace-nowrap">
                           <button
                             onClick={() => handleDelete(activity.id)}
                             disabled={deleteActivity.isPending}
-                            className="rounded px-2 py-1 text-sm text-red-600 hover:bg-red-100 hover:text-red-900 dark:text-red-400 dark:hover:bg-red-900/20 dark:hover:text-red-300"
+                            className={`rounded p-1 ${
+                              isDarkMode
+                                ? "text-red-400 hover:bg-red-900/30"
+                                : "text-red-500 hover:bg-red-100"
+                            }`}
                           >
-                            Delete
+                            <Trash2 className="h-4 w-4" />
                           </button>
                         </td>
                       </tr>
@@ -412,37 +554,77 @@ export default function TimesheetUI() {
           )}
         </div>
 
-        {/* Timesheet Summary - Only shows user's own activities */}
+        {/* Summary Section */}
         {sortedProjects && sortedProjects.length > 0 && (
-          <div className="border-t border-gray-200 p-6 dark:border-gray-700">
+          <div
+            className={`border-t p-6 ${
+              isDarkMode ? "border-gray-700" : "border-gray-200"
+            }`}
+          >
             <h3 className="mb-4 text-lg font-medium text-gray-800 dark:text-white">
-              Summary
+              Daily Summary
             </h3>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-              <div className="rounded-lg bg-indigo-50 p-4 dark:bg-indigo-900/30">
-                <h4 className="text-sm font-medium text-indigo-800 dark:text-indigo-300">
-                  Total Projects
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <div
+                className={`rounded-lg p-4 ${
+                  isDarkMode ? "bg-indigo-900/30" : "bg-indigo-50"
+                }`}
+              >
+                <h4
+                  className={`text-sm font-medium ${
+                    isDarkMode ? "text-indigo-300" : "text-indigo-800"
+                  }`}
+                >
+                  Projects Worked On
                 </h4>
-                <p className="mt-2 text-2xl font-bold text-indigo-600 dark:text-indigo-400">
+                <p
+                  className={`mt-2 text-2xl font-bold ${
+                    isDarkMode ? "text-indigo-400" : "text-indigo-600"
+                  }`}
+                >
                   {projects?.length ?? 0}
                 </p>
               </div>
-              <div className="rounded-lg bg-green-50 p-4 dark:bg-green-900/30">
-                <h4 className="text-sm font-medium text-green-800 dark:text-green-300">
-                  Your Activities
+              <div
+                className={`rounded-lg p-4 ${
+                  isDarkMode ? "bg-green-900/30" : "bg-green-50"
+                }`}
+              >
+                <h4
+                  className={`text-sm font-medium ${
+                    isDarkMode ? "text-green-300" : "text-green-800"
+                  }`}
+                >
+                  Total Activities
                 </h4>
-                <p className="mt-2 text-2xl font-bold text-green-600 dark:text-green-400">
+                <p
+                  className={`mt-2 text-2xl font-bold ${
+                    isDarkMode ? "text-green-400" : "text-green-600"
+                  }`}
+                >
                   {sortedProjects.reduce(
                     (acc, project) => acc + project.activities.length,
                     0,
                   )}
                 </p>
               </div>
-              <div className="rounded-lg bg-purple-50 p-4 dark:bg-purple-900/30">
-                <h4 className="text-sm font-medium text-purple-800 dark:text-purple-300">
-                  Your Total Hours
+              <div
+                className={`rounded-lg p-4 ${
+                  isDarkMode ? "bg-purple-900/30" : "bg-purple-50"
+                }`}
+              >
+                <h4
+                  className={`text-sm font-medium ${
+                    isDarkMode ? "text-purple-300" : "text-purple-800"
+                  }`}
+                >
+                  Total Hours
                 </h4>
-                <p className="mt-2 text-2xl font-bold text-purple-600 dark:text-purple-400">
+                <p
+                  className={`mt-2 text-2xl font-bold ${
+                    isDarkMode ? "text-purple-400" : "text-purple-600"
+                  }`}
+                >
                   {sortedProjects
                     .reduce(
                       (acc, project) =>
@@ -454,6 +636,7 @@ export default function TimesheetUI() {
                       0,
                     )
                     .toFixed(2)}
+                  h
                 </p>
               </div>
             </div>

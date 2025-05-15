@@ -109,7 +109,7 @@ export default function TimelyApp({ developer }: AppProps) {
           <div className="flex-grow"></div>
 
           {/* Theme Toggle */}
-          <div className="mb-4">
+          {/* <div className="mb-4">
             <button
               onClick={() => setIsDarkMode(!isDarkMode)}
               className={`flex w-full items-center justify-between rounded-lg p-3 ${
@@ -133,7 +133,7 @@ export default function TimelyApp({ developer }: AppProps) {
                 ></div>
               </div>
             </button>
-          </div>
+          </div> */}
 
           {/* User Profile & Logout */}
           <div
