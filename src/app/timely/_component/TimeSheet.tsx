@@ -26,7 +26,7 @@ type FormValues = z.infer<typeof formSchema>;
 export default function TimesheetUI() {
   const utils = api.useUtils();
   const { data: projects, isLoading: projectsLoading } =
-    api.project.getAll.useQuery();
+    api.project.getToday.useQuery();
 
   // Sort activities by descending creation date (newest first)
   const sortedProjects = projects?.map((project) => ({
