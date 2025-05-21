@@ -1,6 +1,201 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif,
-    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-sans: var(--font-geist-sans), 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+@layer base {
+  body {
+    @apply antialiased text-base;
+  }
+  
+  h1 {
+    @apply text-3xl font-bold tracking-tight md:text-4xl;
+  }
+  
+  h2 {
+    @apply text-2xl font-bold tracking-tight md:text-3xl;
+  }
+  
+  h3 {
+    @apply text-xl font-semibold md:text-2xl;
+  }
+  
+  h4 {
+    @apply text-lg font-semibold;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply rounded-lg px-6 py-2.5 font-medium transition-all duration-200 flex items-center justify-center;
+  }
+  
+  .btn-primary {
+    @apply bg-gradient-to-r from-indigo-600 to-teal-500 text-white 
+           hover:from-indigo-500 hover:to-teal-400 hover:shadow-lg hover:shadow-indigo-500/20;
+  }
+  
+  .btn-secondary {
+    @apply bg-white/10 text-white hover:bg-white/15 hover:shadow-lg hover:shadow-white/5;
+  }
+  
+  .btn-outline {
+    @apply border border-indigo-500 text-indigo-500 hover:bg-indigo-500/10;
+  }
+  
+  .btn-success {
+    @apply bg-emerald-600 text-white hover:bg-emerald-500;
+  }
+  
+  .btn-danger {
+    @apply bg-rose-600 text-white hover:bg-rose-500;
+  }
+  
+  .card {
+    @apply bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 shadow-xl;
+  }
+  
+  .form-input {
+    @apply w-full rounded-lg border bg-white/5 px-4 py-2.5 text-sm transition-colors
+           focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-400/20;
+  }
+  
+  .form-select {
+    @apply w-full rounded-lg border bg-white/5 px-4 py-2.5 text-sm transition-colors
+           focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-400/20;
+  }
+  
+  .badge {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+  
+  .badge-primary {
+    @apply bg-indigo-500/20 text-indigo-300;
+  }
+  
+  .badge-success {
+    @apply bg-emerald-500/20 text-emerald-300;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+/* Professional transitions */
+.transition-professional {
+  @apply transition-all duration-300 ease-in-out;
+}
+
+/* Enterprise-grade focus states */
+button:focus-visible, a:focus-visible {
+  @apply outline-none ring-2 ring-indigo-400 ring-offset-2 ring-offset-gray-900;
+}
+
+/* Form elements */
+input, select, textarea {
+  @apply bg-white/10 border border-white/20 rounded-lg p-2.5 text-white placeholder-gray-400 
+         focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent;
+}
+
+/* Sidebar styles */
+.sidebar-menu-item {
+  @apply flex w-full items-center rounded-lg px-4 py-3 font-medium transition-colors;
+}
+
+.sidebar-menu-item.active {
+  @apply bg-indigo-500/20 text-indigo-400;
+}
+
+.sidebar-menu-item:not(.active) {
+  @apply hover:bg-white/5;
+}
+
+.sidebar-menu-item-icon {
+  @apply mr-3 h-5 w-5;
+}
+
+/* Custom dark mode styles */
+.app-dark {
+  @apply bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-100;
+}
+
+/* Dashboard stat cards */
+.stat-card {
+  @apply rounded-lg p-4 transition-transform hover:scale-102;
+}
+
+.stat-card-purple {
+  @apply bg-gradient-to-br from-indigo-900/40 to-purple-900/30 border border-indigo-800/30;
+}
+
+.stat-card-green {
+  @apply bg-gradient-to-br from-emerald-900/40 to-teal-900/30 border border-emerald-800/30;
+}
+
+.stat-card-blue {
+  @apply bg-gradient-to-br from-blue-900/40 to-sky-900/30 border border-blue-800/30;
+}
+
+/* Modern table styles */
+.modern-table {
+  @apply w-full divide-y divide-gray-700;
+}
+
+.modern-table th {
+  @apply whitespace-nowrap px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-300;
+}
+
+.modern-table td {
+  @apply whitespace-nowrap px-6 py-4 text-sm;
+}
+
+.modern-table tr {
+  @apply transition-colors hover:bg-white/5;
+}
+
+/* Project and activity cards */
+.project-card {
+  @apply overflow-hidden rounded-lg bg-white/5 border border-white/10 transition-colors hover:bg-white/8;
+}
+
+.project-card-header {
+  @apply flex cursor-pointer items-center justify-between p-4;
+}
+
+.activity-item {
+  @apply border-t border-white/10 p-4;
 }
