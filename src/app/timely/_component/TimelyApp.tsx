@@ -111,16 +111,16 @@ export default function TimelyApp({ developer }: AppProps) {
           >
             <div className="mb-3 flex items-center">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 font-bold text-white">
-                {developer?.name?.slice(0, 2).toUpperCase() || "NA"}
+                {developer?.name?.slice(0, 2).toUpperCase() ?? "NA"}
               </div>
               <div className="ml-3">
-                <div className="font-medium">{developer?.name || "User"}</div>
+                <div className="font-medium">{developer?.name ?? "User"}</div>
                 <div
                   className={`text-sm ${
                     isDarkMode ? "text-gray-400" : "text-gray-500"
                   }`}
                 >
-                  {developer?.email || "user@example.com"}
+                  {developer?.email ?? "user@example.com"}
                 </div>
               </div>
             </div>
