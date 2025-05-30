@@ -199,3 +199,10 @@ input, select, textarea {
 .activity-item {
   @apply border-t border-white/10 p-4;
 }
+select, option {
+  color: #111 !important;         /* Always dark text */
+  background-color: #fff !important; /* Always white background */
+}
+option:checked, option:hover {
+  background-color: #e0e7ff !important; /* Subtle highlight on hover/selected */
+}

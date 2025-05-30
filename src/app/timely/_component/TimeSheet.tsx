@@ -148,33 +148,27 @@ export default function TimesheetUI() {
       {/* Header */}
       <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800 md:text-3xl dark:text-white">
-            Time Logger
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
+        
+          <p className="text-gray-300 dark:text-gray-400">
             Track and manage your daily activities
           </p>
         </div>
-        <button
-          onClick={() => setIsAdding(!isAdding)}
-          className={`flex items-center gap-2 rounded-lg px-4 py-2 font-medium transition-colors ${
-            isAdding
-              ? "bg-red-500/10 text-red-500 hover:bg-red-500/20 dark:bg-red-400/10 dark:text-red-400 dark:hover:bg-red-400/20"
-              : "bg-green-500/10 text-green-500 hover:bg-green-500/20 dark:bg-green-400/10 dark:text-green-400 dark:hover:bg-green-400/20"
-          }`}
-        >
-          {isAdding ? (
-            <>
-              <X className="h-4 w-4" />
-              Cancel
-            </>
-          ) : (
-            <>
-              <Plus className="h-4 w-4" />
-              Add Entry
-            </>
-          )}
-        </button>
+       <button
+  onClick={() => setIsAdding(!isAdding)}
+  className="flex items-center gap-2 rounded-lg px-4 py-2 font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+>
+  {isAdding ? (
+    <>
+      <X className="h-4 w-4" />
+      Cancel
+    </>
+  ) : (
+    <>
+      <Plus className="h-4 w-4" />
+      Add Entry
+    </>
+  )}
+</button>
       </div>
 
       {/* Add Entry Form */}
@@ -490,12 +484,12 @@ export default function TimesheetUI() {
                         }`}
                       >
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="font-medium text-gray-900 dark:text-white">
+                          <div className="font-medium text-sky-300 dark:text-white">
                             {project.name}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-gray-900 dark:text-gray-200">
+                          <div className="text-gray-400 dark:text-gray-200">
                             {activity.about}
                           </div>
                         </td>
