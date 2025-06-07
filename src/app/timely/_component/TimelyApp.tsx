@@ -80,8 +80,41 @@ export default function TimelyApp({ developer }: AppProps) {
               <Calendar className="sidebar-menu-item-icon" />
               Calendar
             </button>
-          </nav>
-          <div className="flex-grow"></div>
+          </div>
+
+          {/* User Profile & Logout */}
+          <div
+            className={`mt-auto rounded-lg ${
+              isDarkMode ? "bg-gray-800/50 border border-gray-700/50" : "border border-gray-200 bg-white"
+            } p-4`}
+          >
+            <div className="mb-3 flex items-center">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 font-bold text-white">
+                {developer?.name?.slice(0, 2).toUpperCase() || "NA"}
+              </div>
+              <div className="ml-3">
+                <div className="font-medium">{developer?.name || "User"}</div>
+                <div
+                  className={`text-sm ${
+                    isDarkMode ? "text-gray-400" : "text-gray-500"
+                  }`}
+                >
+                  {developer?.email || "user@example.com"}
+                </div>
+              </div>
+            </div>
+            <a
+              href="/api/auth/signout"
+              className={`flex w-full items-center justify-center rounded-lg py-2.5 font-medium transition ${
+                isDarkMode
+                  ? "bg-gray-700 hover:bg-gray-600 text-white"
+                  : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+              }`}
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              Logout
+            </a>
+          </div>
         </div>
       </div>
 
