@@ -140,10 +140,11 @@ export default function TimelyForm() {
                     {/* Project */}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex flex-col space-y-2">
-                        <select
-                          {...register(`entries.${index}.projectId`)}
-                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                        >
+                              <select
+  {...register(`entries.${index}.projectId`)}
+  className="block w-full rounded-md border-gray-300 bg-black text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-black dark:text-white"
+>
+ 
                           <option value="">Select project</option>
                           {!projectsLoading &&
                             projects?.map((project) => (
