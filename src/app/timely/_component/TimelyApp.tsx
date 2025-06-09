@@ -1,6 +1,6 @@
 "use client";
 import { useState, type Dispatch, type SetStateAction, type JSX } from "react";
-import { Calendar, Clock, LogOut, PieChart, Moon, Sun, Bell, Settings } from "lucide-react";
+import { Calendar, LogOut, PieChart, Moon, Sun, Bell, Settings } from "lucide-react";
 import TimesheetUI from "./TimeSheet";
 import CalendarComponent from 'react-calendar';
 import Link from "next/link";
