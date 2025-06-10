@@ -13,6 +13,7 @@ export const projectRouter = createTRPCRouter({
         },
       });
     }),
+    
 
   getAll: protectedProcedure.query(async ({ ctx }) => {
     // Get all projects, but include activities only if they belong to the current user

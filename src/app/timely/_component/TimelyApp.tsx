@@ -1,19 +1,19 @@
 "use client";
-import { useMemo } from "react";
-import { Calendar, Clock, LogOut, PieChart, Moon, Sun } from "lucide-react";
 import { useState } from "react";
+import { Calendar, LogOut, PieChart, Moon, Sun, Bell, Settings, CheckSquare } from "lucide-react";
 import TimesheetUI from "./TimeSheet";
-import { Bell, Settings } from "lucide-react";
-import CalendarComponent from 'react-calendar';
+import CalendarComponent from "react-calendar";
 
 type AppProps = {
   developer?: { name: string | null; email: string | null };
 };
 
-// Main Timely App with enhanced premium layout
 export default function TimelyApp({ developer }: AppProps) {
-  const [activeView, setActiveView] = useState("daily"); // Options: "daily" or "weekly"
+  const [activeView, setActiveView] = useState("daily");
   const [isDarkMode, setIsDarkMode] = useState(true);
+  const [calendarDate, setCalendarDate] = useState(new Date());
+  const [tasks, setTasks] = useState<{ id: number; text: string; completed: boolean }[]>([]);
+  const [newTask, setNewTask] = useState("");
 
   // Get current date information
   const currentDate = new Date();
@@ -23,6 +23,24 @@ export default function TimelyApp({ developer }: AppProps) {
     month: "long",
     day: "numeric",
   });
+  const addTask = () => {
+    if (newTask.trim()) {
+      setTasks([...tasks, { id: Date.now(), text: newTask, completed: false }]);
+      setNewTask("");
+    }
+  };
+
+  const deleteTask = (id: number) => {
+    setTasks(tasks.filter((task) => task.id !== id));
+  };
+
+  const toggleTaskCompletion = (id: number) => {
+    setTasks(
+      tasks.map((task) =>
+        task.id === id ? { ...task, completed: !task.completed } : task
+      )
+    );
+  };
 
   return (
     <div
@@ -43,10 +61,10 @@ export default function TimelyApp({ developer }: AppProps) {
           <div className="mb-10 flex items-center justify-center md:justify-start">
             <span className="mr-2 flex h-12 w-12 items-center justify-center">
               <svg viewBox="0 0 48 48" fill="none" className="w-11 h-11">
-                <circle cx="24" cy="24" r="22" fill="#6366f1" stroke="#4f46e5" strokeWidth="4"/>
-                <line x1="24" y1="24" x2="24" y2="13" stroke="#fff" strokeWidth="3" strokeLinecap="round"/>
-                <line x1="24" y1="24" x2="33" y2="24" stroke="#fff" strokeWidth="3" strokeLinecap="round"/>
-                <circle cx="24" cy="24" r="2" fill="#fff"/>
+                <circle cx="24" cy="24" r="22" fill="#6366f1" stroke="#4f46e5" strokeWidth="4" />
+                <line x1="24" y1="24" x2="24" y2="13" stroke="#fff" strokeWidth="3" strokeLinecap="round" />
+                <line x1="24" y1="24" x2="33" y2="24" stroke="#fff" strokeWidth="3" strokeLinecap="round" />
+                <circle cx="24" cy="24" r="2" fill="#fff" />
               </svg>
             </span>
             <h1 className="text-4xl font-extrabold tracking-tight">
@@ -80,41 +98,14 @@ export default function TimelyApp({ developer }: AppProps) {
               <Calendar className="sidebar-menu-item-icon" />
               Calendar
             </button>
-          </div>
-
-          {/* User Profile & Logout */}
-          <div
-            className={`mt-auto rounded-lg ${
-              isDarkMode ? "bg-gray-800/50 border border-gray-700/50" : "border border-gray-200 bg-white"
-            } p-4`}
-          >
-            <div className="mb-3 flex items-center">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 font-bold text-white">
-                {developer?.name?.slice(0, 2).toUpperCase() || "NA"}
-              </div>
-              <div className="ml-3">
-                <div className="font-medium">{developer?.name || "User"}</div>
-                <div
-                  className={`text-sm ${
-                    isDarkMode ? "text-gray-400" : "text-gray-500"
-                  }`}
-                >
-                  {developer?.email || "user@example.com"}
-                </div>
-              </div>
-            </div>
-            <a
-              href="/api/auth/signout"
-              className={`flex w-full items-center justify-center rounded-lg py-2.5 font-medium transition ${
-                isDarkMode
-                  ? "bg-gray-700 hover:bg-gray-600 text-white"
-                  : "bg-gray-100 hover:bg-gray-200 text-gray-700"
-              }`}
+            <button
+              className={`sidebar-menu-item ${activeView === "todo" ? "active" : ""}`}
+              onClick={() => setActiveView("todo")}
             >
-              <LogOut className="mr-2 h-4 w-4" />
-              Logout
-            </a>
-          </div>
+              <CheckSquare className="sidebar-menu-item-icon" />
+              To-Do
+            </button>
+          </nav>
         </div>
       </div>
 
@@ -146,7 +137,7 @@ export default function TimelyApp({ developer }: AppProps) {
                       <Moon className="w-6 h-6 text-gray-700" />
                     )}
                   </button>
-                  {/* User Avatar with dropdown */}
+                                    {/* User Avatar with dropdown */}
                   <div className="relative group">
                     <button
                       className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 font-bold text-white focus:outline-none"
@@ -167,6 +158,7 @@ export default function TimelyApp({ developer }: AppProps) {
                       </a>
                     </div>
                   </div>
+
                 </div>
               </div>
               <p className={`${isDarkMode ? "text-gray-400" : "text-gray-600"} text-sm md:text-base`}>
@@ -174,46 +166,108 @@ export default function TimelyApp({ developer }: AppProps) {
               </p>
             </div>
           </div>
-
+ {/* To-Do List */}
+          {activeView === "todo" && (
+            <div
+              className={`rounded-xl shadow-xl p-6 ${
+                isDarkMode
+                  ? "bg-gray-800/40 border border-gray-700/50"
+                  : "bg-white border border-gray-100"
+              }`}
+            >
+              <h2 className="text-xl font-semibold mb-4">To-Do List</h2>
+              <div className="flex items-center gap-2 mb-4">
+                <input
+                  type="text"
+                  value={newTask}
+                  onChange={(e) => setNewTask(e.target.value)}
+                  placeholder="Enter a new task"
+                  className="flex-grow p-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800"
+                />
+                <button
+                  onClick={addTask}
+                  className="bg-indigo-500 text-white py-2 px-4 rounded-lg hover:bg-indigo-600"
+                >
+                  Add Task
+                </button> </div>
+              <ul className="space-y-2">
+                {tasks.map((task) => (
+                  <li
+                    key={task.id}
+                    className={`flex items-center justify-between p-3 rounded-lg ${
+                      task.completed ? "bg-green-100 dark:bg-green-700" : "bg-gray-100 dark:bg-gray-700"
+                    }`}
+                  >
+                    <span
+                      className={`flex-grow ${
+                        task.completed ? "line-through text-green-600" : "text-gray-800 dark:text-gray-100"
+                      }`}
+                    >
+                      {task.text}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => toggleTaskCompletion(task.id)}
+                        className={`text-sm ${
+                          task.completed ? "text-gray-500 hover:text-gray-700" : "text-blue-500 hover:text-blue-700"
+                        }`}
+                      >
+                        {task.completed ? "Undo" : "Complete"}
+                      </button>
+                      <button
+                      onClick={() => deleteTask(task.id)}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
           {/* Main Content Switch */}
-           {activeView === "calendar" ? (
-  <div
-    className={`h-full w-full rounded-xl shadow-lg ${
-      isDarkMode
-        ? "bg-gray-900 border border-gray-700"
-        : "bg-white border border-gray-200"
-    } flex items-center justify-center p-8`}
-    style={{ minHeight: "60vh" }}
-  >
-<CalendarComponent
-  className="w-full h-full rounded-xl"
-  showNeighboringMonth={false}
-  prevLabel={<span className={`text-xl font-bold ${isDarkMode ? "text-grey dark:text-white" : "text-black"}`}>&lt;</span>}
-  nextLabel={<span className={`text-xl font-bold ${isDarkMode ? "text-grey dark:text-white" : "text-black"}`}>&gt;</span>}
-  navigationLabel={({ label }) => (
-    <span className={`font-semibold text-base ${isDarkMode ? "text-grey dark:text-white" : "text-black"}`}>{label}</span>
-  )}
-  formatShortWeekday={(locale, date) =>
-    date.toLocaleDateString(locale, { weekday: 'short' }).toUpperCase()
-  }
-  tileClassName={({ date, view }) => {
-    if (view === "month") {
-      const isSunday = date.getDay() === 0;
-      const isToday =
-        date.getDate() === new Date().getDate() &&
-        date.getMonth() === new Date().getMonth() &&
-        date.getFullYear() === new Date().getFullYear();
-      return [
-        "text-base text-center",
-        isSunday ? "text-red-500 font-bold" : isDarkMode ? "text-gray-100" : "text-gray-700",
-        isToday ? "bg-indigo-600 text-white rounded-full font-bold" : "",
-      ].join(" ");
-    }
-    return "";
-  }}
-  tileContent={({ date, view }) => null}
-/>
-  </div>
+          {activeView === "calendar" ? (
+            <div
+              className={`h-full w-full rounded-xl shadow-lg ${
+                isDarkMode
+                  ? "bg-gray-900 border border-gray-700"
+                  : "bg-white border border-gray-200"
+              } flex flex-col items-center justify-center p-8`}
+              style={{ minHeight: "60vh" }}
+            >
+              <div className="mb-4 text-2xl font-bold tracking-tight text-center text-indigo-600 dark:text-indigo-300">
+                {calendarDate.toLocaleString("default", { month: "long" })} {calendarDate.getFullYear()}
+              </div>
+              <CalendarComponent
+                className="w-full h-full rounded-xl"
+                value={calendarDate}
+                onActiveStartDateChange={({ activeStartDate }) => setCalendarDate(activeStartDate!)}
+                showNeighboringMonth={false}
+                prevLabel={<span className={`text-xl font-bold ${isDarkMode ? "text-black dark:text-white" : "text-black"}`}>&lt;</span>}
+                nextLabel={<span className={`text-xl font-bold ${isDarkMode ? "text-black dark:text-white" : "text-black"}`}>&gt;</span>}
+                navigationLabel={null}
+                formatShortWeekday={(locale, date) =>
+                  date.toLocaleDateString(locale, { weekday: 'short' }).charAt(0)
+                }
+                tileClassName={({ date, view }) => {
+                  if (view === "month") {
+                    const isSunday = date.getDay() === 0;
+                    const isToday =
+                      date.getDate() === new Date().getDate() &&
+                      date.getMonth() === new Date().getMonth() &&
+                      date.getFullYear() === new Date().getFullYear();
+                    return [
+                      "text-base text-center",
+                      isSunday ? "text-red-500 font-bold" : isDarkMode ? "text-gray-100" : "text-gray-700",
+                      isToday ? "bg-indigo-600 text-white rounded-full font-bold" : "",
+                    ].join(" ");
+                  }
+                  return "";
+                }}
+                tileContent={({ date, view }) => null}
+              />
+            </div>
           ) : activeView === "daily" ? (
             <div
               className={`rounded-xl shadow-xl ${
@@ -224,7 +278,7 @@ export default function TimelyApp({ developer }: AppProps) {
             >
               <TimesheetUI />
             </div>
-          ) : (
+          ) : activeView === "weekly" ? (
             <div
               className={`rounded-xl p-8 shadow-xl ${
                 isDarkMode
@@ -233,9 +287,7 @@ export default function TimelyApp({ developer }: AppProps) {
               }`}
             >
               <div className="mb-6 flex items-center justify-between">
-                <h3 className="text-xl font-semibold">
-                  Weekly Activity Summary
-                </h3>
+                <h3 className="text-xl font-semibold">Weekly Activity Summary</h3>
                 <div className="flex space-x-2">
                   <button
                     className={`rounded-md px-4 py-2 text-sm font-medium ${
@@ -257,7 +309,6 @@ export default function TimelyApp({ developer }: AppProps) {
                   </button>
                 </div>
               </div>
-              {/* Placeholder for weekly view */}
               <div className="flex flex-col items-center justify-center py-20">
                 <div
                   className={`rounded-full p-6 ${
@@ -266,24 +317,18 @@ export default function TimelyApp({ developer }: AppProps) {
                 >
                   <PieChart className="h-12 w-12 text-indigo-400" />
                 </div>
-                <h4 className="mt-6 text-xl font-semibold">
-                  Weekly Reports Coming Soon
-                </h4>
+                <h4 className="mt-6 text-xl font-semibold">Weekly Reports Coming Soon</h4>
                 <p
                   className={`mt-4 max-w-md text-center ${
                     isDarkMode ? "text-gray-400" : "text-gray-500"
                   }`}
                 >
-                  We&apos;re working on bringing you detailed weekly summaries
-                  and charts. Stay tuned for this exciting new feature!
+                  We&apos;re working on bringing you detailed weekly summaries and charts. Stay tuned for this exciting new feature!
                 </p>
-                <button className="btn btn-primary mt-8">
-                  Get Notified
-                </button>
+                <button className="btn btn-primary mt-8">Get Notified</button>
               </div>
             </div>
-          )}
-        </div>
+          ) : null}   </div>
       </div>
     </div>
   );
