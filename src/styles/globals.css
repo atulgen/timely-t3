@@ -219,9 +219,40 @@ input, select, textarea {
   text-align: center;
 }
 select, option {
-  color: #111 !important;         /* Always dark text */
-  background-color: #fff !important; /* Always white background */
+  color: #111 !important;
+  background-color: #fff !important;
 }
 option:checked, option:hover {
-  background-color: #e0e7ff !important; /* Subtle highlight on hover/selected */
+  background-color: #e0e7ff !important;
+}
+
+.notes-input, .notes-textarea {
+  color: #55565B !important;
+  background-color: #fff !important;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+  transition: all 0.2s ease-in-out;
+}
+
+.notes-input:focus, .notes-textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.5);
+}
+
+.todo-input {
+  color: #55565B !important;
+  background-color: #fff !important;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+  transition: all 0.2s ease-in-out;
+  width: 80%;
+}
+
+.todo-input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.5);
 }

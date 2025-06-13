@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Calendar, LogOut, PieChart, Moon, Sun, Bell, Settings, CheckSquare } from "lucide-react";
+import { Calendar, LogOut, PieChart, Moon, Sun, Bell, Settings, FileText, CheckSquare } from "lucide-react";
 import TimesheetUI from "./TimeSheet";
 import CalendarComponent from "react-calendar";
 
@@ -14,7 +14,27 @@ export default function TimelyApp({ developer }: AppProps) {
   const [calendarDate, setCalendarDate] = useState(new Date());
   const [tasks, setTasks] = useState<{ id: number; text: string; completed: boolean }[]>([]);
   const [newTask, setNewTask] = useState("");
+   const [notes, setNotes] = useState<{ id: number; title: string; content: string; timestamp: string }[]>([]);
+  const [newNoteTitle, setNewNoteTitle] = useState("");
+  const [newNoteContent, setNewNoteContent] = useState("");
 
+  // Add Note
+  const addNote = () => {
+    if (newNoteTitle.trim() && newNoteContent.trim()) {
+      const timestamp = new Date().toLocaleString();
+      setNotes([
+        ...notes,
+        { id: Date.now(), title: newNoteTitle, content: newNoteContent, timestamp },
+      ]);
+      setNewNoteTitle("");
+      setNewNoteContent("");
+    }
+  };
+
+  // Delete Note
+  const deleteNote = (id: number) => {
+    setNotes(notes.filter((note) => note.id !== id));
+  };
   // Get current date information
   const currentDate = new Date();
   const formattedDate = currentDate.toLocaleDateString("en-US", {
@@ -105,6 +125,13 @@ export default function TimelyApp({ developer }: AppProps) {
               <CheckSquare className="sidebar-menu-item-icon" />
               To-Do
             </button>
+             <button
+              className={`sidebar-menu-item ${activeView === "notes" ? "active" : ""}`}
+              onClick={() => setActiveView("notes")}
+            >
+             <FileText className="sidebar-menu-item-icon" />
+              Notes
+            </button>
           </nav>
         </div>
       </div>
@@ -167,65 +194,125 @@ export default function TimelyApp({ developer }: AppProps) {
             </div>
           </div>
  {/* To-Do List */}
-          {activeView === "todo" && (
-            <div
-              className={`rounded-xl shadow-xl p-6 ${
-                isDarkMode
-                  ? "bg-gray-800/40 border border-gray-700/50"
-                  : "bg-white border border-gray-100"
+{activeView === "todo" && (
+  <div
+    className={`rounded-xl shadow-xl p-6 ${
+      isDarkMode
+        ? "bg-gray-800/40 border border-gray-700/50"
+        : "bg-white border border-gray-100"
+    }`}
+  >
+    <h2 className="text-xl font-semibold mb-4">To-Do List</h2>
+    <div className="flex items-center  gap-2 mb-4">
+      <input
+        type="text"
+        value={newTask}
+        onChange={(e) => setNewTask(e.target.value)}
+        placeholder="Enter a new task"
+        className="todo-input"
+      />
+      <button
+        onClick={addTask}
+        className="bg-indigo-500 text-white py-2 px-4 rounded-lg hover:bg-indigo-600"
+      >
+        Add Task
+      </button>
+    </div>
+    <ul className="space-y-2">
+      {tasks.map((task) => (
+        <li
+          key={task.id}
+          className={`flex items-center justify-between p-3 rounded-lg ${
+            task.completed ? "bg-green-100 dark:bg-green-700" : "bg-gray-100 dark:bg-gray-700"
+          }`}
+        >
+          <span
+            className={`flex-grow ${
+              task.completed ? "line-through text-green-600" : "text-gray-800 dark:text-gray-100"
+            }`}
+          >
+            {task.text}
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => toggleTaskCompletion(task.id)}
+              className={`text-sm ${
+                task.completed ? "text-gray-500 hover:text-gray-700" : "text-blue-500 hover:text-blue-700"
               }`}
             >
-              <h2 className="text-xl font-semibold mb-4">To-Do List</h2>
-              <div className="flex items-center gap-2 mb-4">
-                <input
-                  type="text"
-                  value={newTask}
-                  onChange={(e) => setNewTask(e.target.value)}
-                  placeholder="Enter a new task"
-                  className="flex-grow p-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800"
-                />
-                <button
-                  onClick={addTask}
-                  className="bg-indigo-500 text-white py-2 px-4 rounded-lg hover:bg-indigo-600"
-                >
-                  Add Task
-                </button> </div>
-              <ul className="space-y-2">
-                {tasks.map((task) => (
-                  <li
-                    key={task.id}
-                    className={`flex items-center justify-between p-3 rounded-lg ${
-                      task.completed ? "bg-green-100 dark:bg-green-700" : "bg-gray-100 dark:bg-gray-700"
-                    }`}
-                  >
-                    <span
-                      className={`flex-grow ${
-                        task.completed ? "line-through text-green-600" : "text-gray-800 dark:text-gray-100"
-                      }`}
-                    >
-                      {task.text}
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => toggleTaskCompletion(task.id)}
-                        className={`text-sm ${
-                          task.completed ? "text-gray-500 hover:text-gray-700" : "text-blue-500 hover:text-blue-700"
-                        }`}
-                      >
-                        {task.completed ? "Undo" : "Complete"}
-                      </button>
-                      <button
-                      onClick={() => deleteTask(task.id)}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+              {task.completed ? "Undo" : "Complete"}
+            </button>
+            <button
+              onClick={() => deleteTask(task.id)}
+              className="text-red-500 hover:text-red-700"
+            >
+              Delete
+            </button>
+          </div>
+        </li>
+      ))}
+    </ul>
+  </div>
+)}
+         
+{/* Notes Feature */}
+{activeView === "notes" && (
+  <div
+    className={`rounded-xl shadow-xl p-6 ${
+      isDarkMode
+        ? "bg-gray-800/40 border border-gray-700/50"
+        : "bg-white border border-gray-100"
+    }`}
+  >
+    <h2 className="text-xl font-semibold mb-4">Notes</h2>
+    <div className="flex flex-col gap-2 mb-4">
+      <input
+  type="text"
+  value={newNoteTitle}
+  onChange={(e) => setNewNoteTitle(e.target.value)}
+  placeholder="Enter note title"
+  className="notes-input"
+/>
+<textarea
+  value={newNoteContent}
+  onChange={(e) => setNewNoteContent(e.target.value)}
+  placeholder="Enter note content"
+  className="notes-textarea"
+  rows={4}
+/>
+      <button
+        onClick={addNote}
+        className="bg-indigo-500 text-white py-2 px-4 rounded-lg hover:bg-indigo-600"
+      >
+        Add Note
+      </button>
+    </div>
+    <ul className="space-y-2">
+      {notes.map((note) => (
+        <li
+          key={note.id}
+          className="flex flex-col p-3 rounded-lg bg-gray-100 dark:bg-gray-700"
+        >
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
+              {note.title}
+            </h3>
+            <span className="text-sm text-gray-500 dark:text-gray-400">
+              {note.timestamp}
+            </span>
+          </div>
+          <p className="text-gray-600 dark:text-gray-300">{note.content}</p>
+          <button
+            onClick={() => deleteNote(note.id)}
+            className="mt-2 text-red-500 hover:text-red-700"
+          >
+            Delete
+          </button>
+        </li>
+      ))}
+    </ul>
+  </div>
+)}
           {/* Main Content Switch */}
           {activeView === "calendar" ? (
             <div
